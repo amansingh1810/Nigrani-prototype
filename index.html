@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DoSJE Nigrani — Prototype v2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#10192B; --navy:#14284A; --navy-deep:#0B1830; --navy-soft:#28405F;
+    --saffron:#E08E00; --saffron-soft:#FBEBCB; --green:#1F8A5F; --green-soft:#E3F3EC;
+    --red:#C13B2D; --red-soft:#FBE7E3; --bg:#EEF1F4; --card:#FFFFFF; --line:#DDE2E8; --muted:#5B6472;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:radial-gradient(circle at 15% 10%, #1c3457 0%, transparent 45%),
+      radial-gradient(circle at 85% 90%, #0e1c33 0%, transparent 50%), var(--navy-deep);
+    min-height:100vh; font-family:'IBM Plex Sans', sans-serif;
+    display:flex; flex-direction:column; align-items:center; padding:36px 16px 60px; color:var(--ink);
+  }
+  .page-head{max-width:440px; text-align:center; margin-bottom:26px; color:#EDEFF3;}
+  .page-head .kicker{font-family:'IBM Plex Sans Condensed'; font-size:13px; color:var(--saffron); margin-bottom:6px;}
+  .page-head h1{font-family:'IBM Plex Sans Condensed'; font-weight:700; font-size:25px; line-height:1.25; margin:0 0 8px;}
+  .page-head p{font-size:13.5px; color:#AEB8C8; line-height:1.55; margin:0;}
+
+  .phone{
+    width:390px; max-width:94vw; height:820px; background:var(--bg); border-radius:44px;
+    border:10px solid #05101F; box-shadow:0 30px 60px rgba(0,0,0,0.45), 0 0 0 1px rgba(255,255,255,0.04);
+    overflow:hidden; position:relative; display:flex; flex-direction:column;
+  }
+  .statusbar{
+    height:30px; background:var(--navy-deep); color:#fff; display:flex; align-items:center;
+    justify-content:space-between; padding:0 22px; font-size:12px; font-weight:600; flex-shrink:0; z-index:5; position:relative;
+  }
+  .statusbar .dots{display:flex; gap:4px; align-items:center;}
+  .statusbar .bar{width:3px; background:#fff; border-radius:1px;}
+
+  .app-header{background:linear-gradient(180deg, var(--navy) 0%, #102338 100%); color:#fff; padding:14px 18px 16px; flex-shrink:0;}
+  .app-header .row1{display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;}
+  .brand{display:flex; align-items:center; gap:9px;}
+  .brand .mark{width:30px;height:30px;border-radius:8px; background:var(--saffron); display:flex;align-items:center;justify-content:center; font-family:'IBM Plex Sans Condensed'; font-weight:700; color:var(--navy-deep); font-size:14px;}
+  .brand .name{font-family:'IBM Plex Sans Condensed'; font-weight:600; font-size:15.5px; line-height:1.15;}
+  .brand .name span{display:block; font-size:10.5px; color:#9FB0C6; font-weight:500;}
+  .head-actions{display:flex; gap:8px;}
+  .icon-btn{position:relative; width:34px;height:34px;border-radius:10px; background:rgba(255,255,255,0.08); display:flex;align-items:center;justify-content:center; cursor:pointer; border:none;}
+  .icon-btn svg{width:16px;height:16px;stroke:#fff;}
+  .icon-btn .badge{position:absolute; top:-3px; right:-3px; background:var(--red); color:#fff; font-size:9px; font-weight:700; width:15px;height:15px;border-radius:50%; display:flex;align-items:center;justify-content:center;}
+  .lang-btn{width:auto; padding:0 10px; gap:5px; font-size:11px; font-weight:700; color:#fff; font-family:'IBM Plex Sans';}
+
+  .role-toggle{display:flex; background:rgba(255,255,255,0.08); border-radius:10px; padding:3px; gap:2px;}
+  .role-toggle button{flex:1; border:none; background:transparent; color:#B7C2D3; font-family:'IBM Plex Sans'; font-size:11px; font-weight:600; padding:8px 4px; border-radius:8px; cursor:pointer;}
+  .role-toggle button.active{background:#fff; color:var(--navy);}
+
+  .content{flex:1; overflow-y:auto; padding:16px 16px 90px; position:relative;}
+  .content::-webkit-scrollbar{width:0;}
+  .screen{display:none;}
+  .screen.active{display:block;}
+
+  h2.section-title{font-family:'IBM Plex Sans Condensed'; font-size:15px; font-weight:600; color:var(--ink); margin:20px 0 10px;}
+  h2.section-title:first-child{margin-top:2px;}
+  .card{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:14px;}
+
+  .stat-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+  .stat{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:13px 14px;}
+  .stat .num{font-family:'IBM Plex Sans Condensed'; font-size:24px; font-weight:700; color:var(--navy); line-height:1;}
+  .stat .lbl{font-size:11.5px; color:var(--muted); margin-top:5px;}
+  .stat .delta{font-size:10.5px; margin-top:6px; font-weight:600;}
+  .delta.up{color:var(--green);} .delta.warn{color:var(--red);}
+
+  .map-panel{background:linear-gradient(160deg,#12233F 0%, #0A1626 100%); border-radius:14px; padding:16px; color:#fff; position:relative; overflow:hidden;}
+  .map-panel .grid-bg{position:absolute; inset:0; opacity:0.15; background-image:linear-gradient(#3E5A82 1px, transparent 1px), linear-gradient(90deg,#3E5A82 1px, transparent 1px); background-size:22px 22px;}
+  .map-panel .top{display:flex; justify-content:space-between; align-items:center; position:relative; margin-bottom:14px;}
+  .map-panel .top .t{font-size:13px; font-weight:600;} .map-panel .top .s{font-size:11px; color:#9FB0C6;}
+  .state-dots{display:flex; flex-wrap:wrap; gap:14px; position:relative;}
+  .state-dot{display:flex; flex-direction:column; align-items:center; gap:6px; width:56px;}
+  .state-dot .ring{width:14px;height:14px;border-radius:50%; position:relative;}
+  .state-dot .ring::after{content:''; position:absolute; inset:-5px; border-radius:50%; border:1.5px solid currentColor; opacity:0.5;}
+  .state-dot.ok .ring{background:var(--green); color:var(--green);}
+  .state-dot.watch .ring{background:var(--saffron); color:var(--saffron);}
+  .state-dot.flag .ring{background:var(--red); color:var(--red); animation:pulse 1.6s infinite;}
+  @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(193,59,45,0.5);}50%{box-shadow:0 0 0 6px rgba(193,59,45,0);}}
+  .state-dot .name{font-size:10px; color:#C6D0DF; text-align:center;}
+  .legend{display:flex; gap:14px; margin-top:14px; position:relative;}
+  .legend span{font-size:10.5px; color:#AEB8C8; display:flex; align-items:center; gap:5px;}
+  .legend i{width:8px;height:8px;border-radius:50%; display:inline-block;}
+
+  .qa-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px;}
+  .qa-btn{border:none; border-radius:12px; padding:14px 10px; cursor:pointer; font-weight:600; font-size:12.5px; display:flex; flex-direction:column; gap:8px; align-items:flex-start; text-align:left;}
+  .qa-btn.a{background:var(--navy); color:#fff;} .qa-btn.b{background:var(--saffron-soft); color:#7A5300;}
+  .qa-btn svg{width:19px;height:19px;}
+
+  .list-item{display:flex; gap:11px; padding:11px 0; border-bottom:1px solid var(--line);}
+  .list-item:last-child{border-bottom:none;}
+  .list-item .ic{width:34px;height:34px;border-radius:9px; flex-shrink:0; display:flex;align-items:center;justify-content:center;}
+  .list-item .ic svg{width:16px;height:16px;}
+  .list-item .body{flex:1; min-width:0;}
+  .list-item .t1{font-size:13px; font-weight:600; color:var(--ink);}
+  .list-item .t2{font-size:11.5px; color:var(--muted); margin-top:2px;}
+  .tag{display:inline-block; font-size:10px; font-weight:700; padding:2px 8px; border-radius:20px; margin-top:5px;}
+  .tag.red{background:var(--red-soft); color:var(--red);} .tag.green{background:var(--green-soft); color:var(--green);} .tag.saffron{background:var(--saffron-soft); color:#7A5300;}
+
+  .feed-card{border-radius:14px; overflow:hidden; margin-bottom:12px; border:1px solid var(--line); background:var(--card);}
+  .feed-video{height:150px; position:relative; overflow:hidden; background:linear-gradient(120deg,#1a2c46,#0c1626 60%,#233a5c);}
+  .feed-video .scan{position:absolute; inset:0; background:repeating-linear-gradient(0deg, rgba(255,255,255,0.035) 0px, rgba(255,255,255,0.035) 1px, transparent 1px, transparent 3px); animation:drift 6s linear infinite;}
+  @keyframes drift{0%{background-position-y:0;}100%{background-position-y:120px;}}
+  .live-pill{position:absolute; top:10px; left:10px; background:var(--red); color:#fff; font-size:10px; font-weight:700; padding:3px 8px 3px 6px; border-radius:20px; display:flex; align-items:center; gap:4px;}
+  .live-pill .dot{width:6px;height:6px;border-radius:50%; background:#fff; animation:blink 1.2s infinite;}
+  @keyframes blink{0%,100%{opacity:1;}50%{opacity:0.25;}}
+  .viewers{position:absolute; top:10px; right:10px; background:rgba(0,0,0,0.5); color:#fff; font-size:10px; padding:3px 8px; border-radius:20px;}
+  .feed-video .ts{position:absolute; bottom:10px; left:10px; color:#D9E1EC; font-size:10.5px; font-family:'IBM Plex Sans Condensed';}
+  .feed-meta{padding:10px 12px;}
+  .feed-meta .t1{font-size:13px; font-weight:600;} .feed-meta .t2{font-size:11px; color:var(--muted); margin-top:2px;}
+
+  .vc-hero{background:var(--navy); color:#fff; border-radius:16px; padding:20px 16px; text-align:center;}
+  .vc-hero .icon-wrap{width:54px;height:54px;border-radius:50%; background:rgba(255,255,255,0.1); margin:0 auto 12px; display:flex; align-items:center; justify-content:center;}
+  .vc-hero .icon-wrap svg{width:24px;height:24px;stroke:var(--saffron);}
+  .vc-hero h3{font-family:'IBM Plex Sans Condensed'; font-size:16px; margin:0 0 6px;}
+  .vc-hero p{font-size:12px; color:#AEB8C8; line-height:1.5; margin:0 0 16px;}
+  .btn-primary{background:var(--saffron); color:#3B2600; border:none; border-radius:11px; padding:13px 18px; font-weight:700; font-size:13.5px; cursor:pointer; width:100%; font-family:'IBM Plex Sans';}
+  .btn-primary:disabled{opacity:0.6;}
+  .btn-ghost{background:transparent; border:1px solid var(--line); border-radius:11px; padding:12px 18px; font-weight:600; font-size:13px; cursor:pointer; width:100%; color:var(--ink); font-family:'IBM Plex Sans';}
+  .shuffle-box{margin-top:16px; background:rgba(255,255,255,0.06); border-radius:11px; padding:14px; font-family:'IBM Plex Sans Condensed'; font-size:14px; color:#fff; min-height:20px;}
+  .call-screen{background:#0B1626; border-radius:16px; padding:0; overflow:hidden; color:#fff;}
+  .call-top{padding:22px 16px 16px; text-align:center;}
+  .avatar{width:70px;height:70px;border-radius:50%; margin:0 auto 12px; background:linear-gradient(135deg,#28405F,#0F2038); display:flex; align-items:center; justify-content:center; font-family:'IBM Plex Sans Condensed'; font-weight:700; font-size:22px;}
+  .call-top .nm{font-size:15px; font-weight:600;} .call-top .rl{font-size:11.5px; color:#93A2B9; margin-top:2px;}
+  .call-top .tm{font-size:12px; color:var(--saffron); margin-top:10px; font-family:'IBM Plex Sans Condensed';}
+  .call-actions{display:flex; justify-content:center; gap:14px; padding:18px 16px 22px;}
+  .call-actions button{width:46px;height:46px;border-radius:50%; border:none; display:flex;align-items:center;justify-content:center; cursor:pointer;}
+  .call-actions button svg{width:18px;height:18px;}
+  .ca-mute{background:rgba(255,255,255,0.12); color:#fff;} .ca-end{background:var(--red); color:#fff;} .ca-cam{background:rgba(255,255,255,0.12); color:#fff;}
+
+  .assign-card{background:linear-gradient(160deg,#12233F,#0A1626); border-radius:15px; padding:16px; color:#fff;}
+  .assign-card .top{display:flex; justify-content:space-between; align-items:flex-start;}
+  .assign-card .tt{font-size:11px; color:#9FB0C6; font-family:'IBM Plex Sans Condensed';}
+  .assign-card .nm{font-size:16px; font-weight:600; margin-top:4px;} .assign-card .loc{font-size:11.5px; color:#AEB8C8; margin-top:3px;}
+  .priority{padding:3px 9px; border-radius:20px; font-size:10px; font-weight:700;}
+  .priority.high{background:var(--red-soft); color:var(--red);} .priority.med{background:var(--saffron-soft); color:#7A5300;} .priority.low{background:var(--green-soft); color:var(--green);}
+  .gps-line{display:flex; align-items:center; gap:6px; margin-top:14px; font-size:11.5px; color:#C6D0DF; font-family:'IBM Plex Sans Condensed';}
+  .gps-line svg{width:13px;height:13px; stroke:var(--saffron);}
+
+  .checklist{margin-top:12px;}
+  .chk-item{display:flex; align-items:center; gap:10px; padding:11px 0; border-bottom:1px solid var(--line);}
+  .chk-item:last-child{border-bottom:none;}
+  .chk-box{width:20px;height:20px;border-radius:6px; border:1.8px solid #B9C2CE; flex-shrink:0; cursor:pointer; display:flex;align-items:center;justify-content:center; transition:all .15s;}
+  .chk-box.done{background:var(--green); border-color:var(--green);}
+  .chk-box svg{width:12px;height:12px; stroke:#fff; opacity:0;} .chk-box.done svg{opacity:1;}
+  .chk-item span{font-size:13px; color:var(--ink);} .chk-item.done span{color:var(--muted); text-decoration:line-through;}
+
+  .evidence-row{display:flex; gap:10px; margin-top:12px;}
+  .evi-btn{flex:1; border:1.5px dashed #B9C2CE; border-radius:11px; padding:14px 8px; text-align:center; background:transparent; cursor:pointer; font-size:11.5px; font-weight:600; color:var(--muted);}
+  .evi-btn.filled{border-style:solid; border-color:var(--green); color:var(--green); background:var(--green-soft);}
+  .evi-btn svg{width:18px;height:18px; display:block; margin:0 auto 6px;}
+
+  .bar-chart{display:flex; align-items:flex-end; gap:8px; height:110px; margin-top:12px;}
+  .bar-chart .col{flex:1; display:flex; flex-direction:column; align-items:center; gap:6px; height:100%; justify-content:flex-end;}
+  .bar-chart .bar{width:100%; border-radius:5px 5px 0 0; background:var(--navy);} .bar-chart .bar.flag{background:var(--red);}
+  .bar-chart .wk{font-size:9.5px; color:var(--muted);}
+
+  .anomaly-item{padding:12px 0; border-bottom:1px solid var(--line);} .anomaly-item:last-child{border-bottom:none;}
+  .anomaly-item .row{display:flex; justify-content:space-between; align-items:center;}
+  .anomaly-item .t1{font-size:13px; font-weight:600;} .anomaly-item .conf{font-size:10.5px; color:var(--muted); font-family:'IBM Plex Sans Condensed';}
+  .anomaly-item .reason{font-size:11.5px; color:var(--muted); margin-top:4px;}
+
+  .toast{position:absolute; bottom:96px; left:16px; right:16px; background:var(--ink); color:#fff; padding:12px 14px; border-radius:11px; font-size:12.5px; display:flex; align-items:center; gap:9px; transform:translateY(20px); opacity:0; transition:all .25s; pointer-events:none; z-index:30;}
+  .toast.show{transform:translateY(0); opacity:1;}
+  .toast svg{width:16px;height:16px; stroke:var(--green); flex-shrink:0;}
+
+  .bottom-nav{position:absolute; left:0; right:0; bottom:0; background:#fff; border-top:1px solid var(--line); display:flex; padding:8px 6px 12px; flex-shrink:0; z-index:2;}
+  .nav-btn{flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; border:none; background:transparent; cursor:pointer; color:#9AA4B2; padding:4px 2px;}
+  .nav-btn svg{width:20px;height:20px;} .nav-btn span{font-size:9.5px; font-weight:600;} .nav-btn.active{color:var(--navy);}
+
+  
+  .lb-row{display:flex; align-items:center; gap:11px; padding:11px 0; border-bottom:1px solid var(--line);}
+  .lb-row:last-child{border-bottom:none;}
+  .lb-rank{width:24px;height:24px;border-radius:7px; background:var(--bg); display:flex;align-items:center;justify-content:center; font-family:'IBM Plex Sans Condensed'; font-weight:700; font-size:12px; color:var(--navy); flex-shrink:0;}
+  .lb-body{flex:1;} .lb-body .t1{font-size:13px; font-weight:600;}
+  .lb-track{height:6px; background:var(--line); border-radius:20px; margin-top:6px; overflow:hidden;}
+  .lb-fill{height:100%; border-radius:20px; background:var(--green);}
+  .lb-pct{font-family:'IBM Plex Sans Condensed'; font-weight:700; font-size:13px; color:var(--ink); flex-shrink:0;}
+
+  .budget-row{margin-bottom:14px;} .budget-row:last-child{margin-bottom:0;}
+  .budget-row .head{display:flex; justify-content:space-between; font-size:12px; margin-bottom:6px;}
+  .budget-row .head b{font-weight:600; color:var(--ink);} .budget-row .head span{color:var(--muted);}
+  .budget-track{height:9px; background:var(--bg); border-radius:20px; overflow:hidden;}
+  .budget-fill{height:100%; border-radius:20px; background:var(--saffron);}
+
+  .heat-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-top:10px;}
+  .heat-cell{border-radius:10px; padding:10px 6px; text-align:center;}
+  .heat-cell .n{font-family:'IBM Plex Sans Condensed'; font-weight:700; font-size:15px;}
+  .heat-cell .d{font-size:9px; margin-top:3px;}
+  .heat-cell.c1{background:var(--red-soft); color:var(--red);}
+  .heat-cell.c2{background:var(--saffron-soft); color:#7A5300;}
+  .heat-cell.c3{background:var(--green-soft); color:var(--green);}
+
+  
+  .overlay{position:absolute; top:30px; left:0; right:0; bottom:0; background:var(--bg); z-index:20; display:none; flex-direction:column;}
+  .overlay.show{display:flex;}
+  .overlay-scroll{flex:1; overflow-y:auto; padding:22px 20px 30px;}
+  .overlay-scroll::-webkit-scrollbar{width:0;}
+
+  .login-brand{text-align:center; margin-bottom:22px;}
+  .login-brand .mark{width:52px;height:52px;border-radius:14px; background:var(--saffron); margin:0 auto 12px; display:flex;align-items:center;justify-content:center; font-family:'IBM Plex Sans Condensed'; font-weight:700; color:var(--navy-deep); font-size:22px;}
+  .login-brand h3{font-family:'IBM Plex Sans Condensed'; font-size:18px; margin:0 0 4px; color:var(--ink);}
+  .login-brand p{font-size:12px; color:var(--muted); margin:0;}
+
+  .role-card{display:flex; align-items:center; gap:12px; background:var(--card); border:1.5px solid var(--line); border-radius:14px; padding:13px 14px; margin-bottom:10px; cursor:pointer;}
+  .role-card.selected{border-color:var(--saffron); background:var(--saffron-soft);}
+  .role-card .ric{width:38px;height:38px;border-radius:10px; background:var(--navy); color:#fff; display:flex;align-items:center;justify-content:center; flex-shrink:0;}
+  .role-card .ric svg{width:18px;height:18px;}
+  .role-card .rt1{font-size:13.5px; font-weight:700; color:var(--ink);}
+  .role-card .rt2{font-size:11px; color:var(--muted); margin-top:2px;}
+  .role-card .chk{width:19px;height:19px;border-radius:50%; border:1.8px solid #B9C2CE; margin-left:auto; flex-shrink:0;}
+  .role-card.selected .chk{background:var(--saffron); border-color:var(--saffron);}
+
+  .field-label{font-size:11.5px; font-weight:600; color:var(--muted); margin:16px 0 6px;}
+  .field-input{width:100%; border:1.5px solid var(--line); border-radius:11px; padding:12px 14px; font-size:13.5px; font-family:'IBM Plex Sans'; background:var(--card); color:var(--ink);}
+  .otp-row{display:flex; gap:9px; margin-top:6px;}
+  .otp-box{width:44px;height:50px; border:1.5px solid var(--line); border-radius:10px; background:var(--card); display:flex;align-items:center;justify-content:center; font-family:'IBM Plex Sans Condensed'; font-weight:700; font-size:18px; color:var(--ink);}
+
+  .notif-header{display:flex; align-items:center; gap:10px; padding:16px 16px 10px;}
+  .back-btn{width:32px;height:32px;border-radius:9px; background:var(--card); border:1px solid var(--line); display:flex;align-items:center;justify-content:center; cursor:pointer;}
+  .back-btn svg{width:16px;height:16px;}
+  .notif-header h3{font-family:'IBM Plex Sans Condensed'; font-size:16px; margin:0; flex:1;}
+  .mark-read{font-size:11.5px; font-weight:600; color:var(--saffron); background:none; border:none; cursor:pointer;}
+  .notif-day{font-size:11px; font-weight:700; color:var(--muted); margin:16px 0 8px; text-transform:uppercase; letter-spacing:0.03em;}
+  .notif-item{display:flex; gap:11px; background:var(--card); border:1px solid var(--line); border-radius:13px; padding:12px; margin-bottom:9px;}
+  .notif-item .ic{width:36px;height:36px;border-radius:10px; flex-shrink:0; display:flex;align-items:center;justify-content:center;}
+  .notif-item .ic svg{width:17px;height:17px;}
+  .notif-item .t1{font-size:12.5px; font-weight:700; color:var(--ink);}
+  .notif-item .t2{font-size:11.5px; color:var(--muted); margin-top:2px; line-height:1.4;}
+  .notif-item .time{font-size:10px; color:#9AA4B2; margin-top:5px;}
+
+  @media (max-width:430px){ .phone{height:86vh;} }
+</style>
+</head>
+<body>
+
+<div class="page-head">
+  <div class="kicker">DoSJE · Smart Automation Prototype · v2</div>
+  <h1>Nigrani — Real-Time Monitoring &amp; Inspection App</h1>
+  <p>Now with a login flow, a notifications panel, a DoSJE HQ admin view, and an English/Hindi toggle — tap the globe icon in the header to switch language live.</p>
+</div>
+
+<div class="phone">
+  <div class="statusbar">
+    <span>9:41</span>
+    <div class="dots"><div class="bar" style="height:6px"></div><div class="bar" style="height:8px"></div><div class="bar" style="height:10px"></div><div class="bar" style="height:12px"></div></div>
+  </div>
+
+  <div class="app-header">
+    <div class="row1">
+      <div class="brand"><div class="mark">DJ</div><div class="name" id="brandName">Nigrani<span id="brandSub">Dept. of Social Justice &amp; Empowerment</span></div></div>
+      <div class="head-actions">
+        <button class="icon-btn lang-btn" onclick="toggleLang()"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg><span id="langLabel">हिं</span></button>
+        <button class="icon-btn" onclick="openNotifications()">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          <div class="badge">4</div>
+        </button>
+      </div>
+    </div>
+    <div class="role-toggle" id="roleToggle"></div>
+  </div>
+
+  <div class="content" id="content">
+
+    <div class="screen active" id="screen-home"></div>
+
+    <div class="screen" id="screen-feeds">
+      <h2 class="section-title" id="t-feeds"></h2>
+      <div id="feedsList"></div>
+    </div>
+
+    <div class="screen" id="screen-vc">
+      <div class="vc-hero" id="vcHero"></div>
+    </div>
+
+    <div class="screen" id="screen-inspect">
+      <h2 class="section-title" style="margin-top:2px;" id="t-inspectTitle"></h2>
+      <div class="assign-card" id="assignCard"></div>
+      <button class="btn-ghost" style="margin-top:12px;" onclick="generateAssignment()" id="btnGenAssign"></button>
+      <h2 class="section-title" id="t-checklist"></h2>
+      <div class="card">
+        <div class="checklist" id="checklist"></div>
+        <div class="evidence-row">
+          <button class="evi-btn" id="gpsBtn" onclick="captureGPS()"></button>
+          <button class="evi-btn" id="photoBtn" onclick="capturePhoto()"></button>
+          <input type="file" accept="image/*" capture="environment" id="photoInput" style="display:none" onchange="handlePhoto(event)">
+        </div>
+        <div id="photoPreviewWrap" style="display:none; margin-top:10px;">
+          <img id="photoPreview" style="width:100%; border-radius:10px; display:block;">
+        </div>
+        <button class="btn-primary" style="margin-top:14px;" onclick="submitReport()" id="btnSubmitReport"></button>
+      </div>
+    </div>
+
+    <div class="screen" id="screen-reports">
+      <h2 class="section-title" style="margin-top:2px;" id="t-anomalyChart"></h2>
+      <div class="card"><div class="bar-chart" id="barChart"></div></div>
+      <h2 class="section-title" id="t-flaggedAnomalies"></h2>
+      <div class="card" id="anomalyList"></div>
+      <h2 class="section-title" id="t-inspectionHistory"></h2>
+      <div class="card" id="historyList"></div>
+    </div>
+
+  </div>
+
+  <div class="toast" id="toast">
+    <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+    <span id="toastText"></span>
+  </div>
+
+  <div class="bottom-nav" id="bottomNav"></div>
+
+  <!-- LOGIN OVERLAY -->
+  <div class="overlay show" id="overlayLogin">
+    <div class="overlay-scroll">
+      <div class="login-brand">
+        <div class="mark">DJ</div>
+        <h3 id="loginHeading"></h3>
+        <p id="loginSub"></p>
+      </div>
+      <div id="roleCards"></div>
+      <div class="field-label" id="fieldLabelId"></div>
+      <input class="field-input" id="empIdInput" type="text" placeholder="DoSJE-2026-XXXXX">
+      <div id="otpArea"></div>
+      <button class="btn-primary" style="margin-top:20px;" id="loginActionBtn" onclick="loginAction()"></button>
+    </div>
+  </div>
+
+  <!-- NOTIFICATIONS OVERLAY -->
+  <div class="overlay" id="overlayNotif">
+    <div class="notif-header">
+      <button class="back-btn" onclick="closeNotifications()"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
+      <h3 id="notifTitle"></h3>
+      <button class="mark-read" id="markReadBtn" onclick="showToast(T[lang].marked_read)"></button>
+    </div>
+    <div class="overlay-scroll" id="notifList"></div>
+  </div>
+
+</div>
+
+<script>
+// text strings for en/hi
+let lang = localStorage.getItem('nigrani_lang') || 'en';
+const T = {
+en:{
+  brand_sub:"Dept. of Social Justice & Empowerment",
+  lang_label:"हिं",
+  role_official:"Official", role_inspector:"Inspector", role_hq:"HQ Admin",
+  role_official_full:"Department Official", role_inspector_full:"PMU Inspector", role_hq_full:"DoSJE HQ Admin",
+  role_official_desc:"State/District level monitoring", role_inspector_desc:"Field inspection & reporting", role_hq_desc:"National oversight & analytics",
+  nav_dashboard:"Dashboard", nav_feed:"Live Feed", nav_vc:"VC Connect", nav_inspect:"Inspect", nav_reports:"Reports",
+  login_heading:"Sign in to Nigrani", login_sub:"Select your role to continue",
+  field_label_id:"Employee / Officer ID", send_otp:"Send OTP", verify_continue:"Verify & Continue",
+  otp_sent:"OTP sent to your registered number",
+  welcome_official:"Welcome, Officer Sharma", welcome_inspector:"Welcome, Inspector Raghav", welcome_hq:"Welcome, DoSJE Headquarters",
+  live_projects:"Live Projects", active_cctv:"Active CCTV Feeds", inspections_today:"Inspections Today", anomalies_flagged:"Anomalies Flagged",
+  d_this_week:"↑ 4 this week", d_uptime:"92% uptime", d_completed:"18 completed", d_review:"Review pending",
+  live_monitoring:"Live Monitoring — Statewise Status", states_covered:"6 states covered", updated_rt:"Updated in real time",
+  legend_normal:"Normal", legend_watch:"Under watch", legend_anomaly:"Anomaly",
+  quick_actions:"Quick Actions", assign_random:"Assign Random Inspection", start_vc:"Start Random VC",
+  recent_anomalies:"Recent Anomalies",
+  anomaly1_t:"Skill Development Centre, Jaipur", anomaly1_d:"Attendance mismatch — possible proxy staff", anomaly1_tag:"High severity",
+  anomaly2_t:"Asha Kiran Old Age Home, Nagpur", anomaly2_d:"CCTV feed was offline for 46 minutes", anomaly2_tag:"Under review",
+  todays_assignment:"Today's Assignment", high_priority:"High priority", start_inspection:"Start Inspection",
+  inspections_month:"Inspections this month", compliance_rate:"Compliance rate",
+  connect_vc:"Connect VC with Incharge", view_feed:"View Site's Live Feed",
+  states_onboarded:"States Onboarded", budget_utilized:"Budget Utilised", ngos_monitored:"NGOs Monitored", noncompliance:"Non-compliance Rate",
+  state_leaderboard:"State-wise Compliance Leaderboard", budget_utilization:"Scheme-wise Budget Utilisation", flagged_districts:"Top Flagged Districts",
+  feeds_title:"Live CCTV Feeds — Connected Institutes", watching:"watching",
+  vc_title:"Random VC Connect", vc_desc:"The system automatically picks a project or institute at random and connects the Incharge, staff, or a beneficiary over video call — with no advance notice, so proxy functioning and fake reporting can't be prepared for.",
+  start_random_vc:"Start Random VC", checking:"Checking:", selected_connecting:"Selected — connecting...", call_ended:"Call ended and logged",
+  inspect_title:"AI Random Inspection Assignment", generate_assignment:"Generate New Assignment", scanning:"Scanning...",
+  assigned_by_ai:"Assigned by AI", coords_generated:"Coordinates generated · Anomaly score", new_assignment:"New assignment generated",
+  priority_high:"High priority", priority_med:"Medium priority", priority_low:"Standard priority",
+  checklist_title:"Inspection Checklist",
+  chk1:"Attendance register verified", chk2:"Infrastructure & sanitation condition", chk3:"Beneficiary interviews completed", chk4:"Fund utilisation records checked",
+  capture_gps:"Capture GPS Location", capture_photo:"Capture Photo Evidence", locking:"Locking location...", locked:"locked", photos_added:"2 photos added",
+  submit_report:"Submit Inspection Report", report_submitted:"Report submitted with geo-tag & timestamp",
+  anomaly_chart:"AI Anomaly Analytics — Weekly Flags", flagged_anomalies:"Flagged Anomalies", inspection_history:"Inspection History",
+  confidence:"Confidence", review_pending:"Review pending", investigation_ongoing:"Investigation ongoing", resolved:"Resolved", compliant:"Compliant", noncompliant:"Non-compliant",
+  week:"Week",
+  r1_t:"Attendance mismatch", r1_d:"Skill Development Centre, Jaipur — gap between biometric and CCTV headcount",
+  r2_t:"Feed downtime", r2_d:"Asha Kiran Old Age Home, Nagpur — offline for 46 minutes",
+  r3_t:"Possible proxy staff", r3_d:"OBC Hostel Campus 2 — face-match inconsistency",
+  h1_t:"SC Hostel, Patna", h1_d:"10 Sept · Inspector: Raghav",
+  h2_t:"Divyang Empowerment Centre, Raipur", h2_d:"8 Sept · Inspector: Meena",
+  h3_t:"Skill Development Centre, Jaipur", h3_d:"6 Sept · Inspector: Raghav",
+  notif_title:"Notifications", mark_read:"Mark all read", marked_read:"All notifications marked as read",
+  n_today:"Today", n_earlier:"Earlier",
+  n1_t:"New inspection assigned", n1_d:"OBC Hostel, Campus 2 has been assigned to you — high priority.", n1_time:"10 min ago",
+  n2_t:"Anomaly flagged", n2_d:"Attendance mismatch detected at Skill Development Centre, Jaipur.", n2_time:"1 hr ago",
+  n3_t:"Missed VC call", n3_d:"Random VC to Asha Kiran Old Age Home was not answered.", n3_time:"3 hr ago",
+  n4_t:"Report approved", n4_d:"Your inspection report for SC Hostel, Patna has been approved.", n4_time:"Yesterday",
+},
+hi:{
+  brand_sub:"सामाजिक न्याय एवं अधिकारिता विभाग",
+  lang_label:"EN",
+  role_official:"अधिकारी", role_inspector:"निरीक्षक", role_hq:"HQ एडमिन",
+  role_official_full:"विभागीय अधिकारी", role_inspector_full:"PMU निरीक्षक", role_hq_full:"DoSJE HQ एडमिन",
+  role_official_desc:"राज्य/जिला स्तर की निगरानी", role_inspector_desc:"क्षेत्रीय निरीक्षण व रिपोर्टिंग", role_hq_desc:"राष्ट्रीय निगरानी व विश्लेषण",
+  nav_dashboard:"डैशबोर्ड", nav_feed:"Live Feed", nav_vc:"VC Connect", nav_inspect:"निरीक्षण", nav_reports:"रिपोर्ट्स",
+  login_heading:"Nigrani में साइन इन करें", login_sub:"जारी रखने के लिए अपनी भूमिका चुनें",
+  field_label_id:"कर्मचारी / अधिकारी ID", send_otp:"OTP भेजें", verify_continue:"सत्यापित करें व जारी रखें",
+  otp_sent:"आपके पंजीकृत नंबर पर OTP भेजा गया",
+  welcome_official:"नमस्ते, अधिकारी शर्मा", welcome_inspector:"नमस्ते, निरीक्षक राघव", welcome_hq:"नमस्ते, DoSJE मुख्यालय",
+  live_projects:"लाइव परियोजनाएँ", active_cctv:"सक्रिय CCTV फ़ीड", inspections_today:"आज के निरीक्षण", anomalies_flagged:"विसंगति फ़्लैग",
+  d_this_week:"↑ इस सप्ताह 4", d_uptime:"92% अपटाइम", d_completed:"18 पूर्ण", d_review:"समीक्षा लंबित",
+  live_monitoring:"लाइव मॉनिटरिंग — राज्यवार स्थिति", states_covered:"6 राज्य कवर", updated_rt:"पल-पल अपडेट",
+  legend_normal:"सामान्य", legend_watch:"निगरानी में", legend_anomaly:"विसंगति",
+  quick_actions:"त्वरित कार्रवाई", assign_random:"यादृच्छिक निरीक्षण असाइन करें", start_vc:"यादृच्छिक VC शुरू करें",
+  recent_anomalies:"हाल की विसंगतियाँ",
+  anomaly1_t:"कौशल विकास केंद्र, जयपुर", anomaly1_d:"उपस्थिति में बेमेल — संभावित प्रॉक्सी स्टाफ", anomaly1_tag:"उच्च गंभीरता",
+  anomaly2_t:"वृद्धाश्रम आशा किरण, नागपुर", anomaly2_d:"CCTV फ़ीड 46 मिनट तक ऑफ़लाइन रही", anomaly2_tag:"समीक्षा में",
+  todays_assignment:"आज का असाइनमेंट", high_priority:"उच्च प्राथमिकता", start_inspection:"निरीक्षण शुरू करें",
+  inspections_month:"इस माह पूर्ण निरीक्षण", compliance_rate:"अनुपालन दर",
+  connect_vc:"Incharge से VC जोड़ें", view_feed:"साइट का लाइव फ़ीड देखें",
+  states_onboarded:"राज्य जुड़े", budget_utilized:"बजट उपयोग", ngos_monitored:"निगरानी में NGOs", noncompliance:"गैर-अनुपालन दर",
+  state_leaderboard:"राज्यवार अनुपालन लीडरबोर्ड", budget_utilization:"योजनावार बजट उपयोग", flagged_districts:"सर्वाधिक फ़्लैग जिले",
+  feeds_title:"Live CCTV फ़ीड — जुड़ी हुई संस्थाएँ", watching:"देख रहे हैं",
+  vc_title:"Random VC Connect", vc_desc:"सिस्टम स्वतः किसी भी परियोजना/संस्था को यादृच्छिक रूप से चुनकर Incharge, Staff या Beneficiary से वीडियो कॉल जोड़ता है — पूर्व सूचना दिए बिना, ताकि फ़र्ज़ी रिपोर्टिंग रुके।",
+  start_random_vc:"यादृच्छिक VC शुरू करें", checking:"जाँच हो रही है:", selected_connecting:"चयनित — कनेक्ट हो रहा है...", call_ended:"कॉल समाप्त हुई और लॉग में दर्ज",
+  inspect_title:"AI यादृच्छिक निरीक्षण असाइनमेंट", generate_assignment:"नया असाइनमेंट जनरेट करें", scanning:"स्कैन हो रहा है...",
+  assigned_by_ai:"AI द्वारा असाइन किया गया", coords_generated:"निर्देशांक जनरेट हुए · विसंगति स्कोर", new_assignment:"नया असाइनमेंट जनरेट हुआ",
+  priority_high:"उच्च प्राथमिकता", priority_med:"मध्यम प्राथमिकता", priority_low:"सामान्य प्राथमिकता",
+  checklist_title:"निरीक्षण चेकलिस्ट",
+  chk1:"उपस्थिति रजिस्टर सत्यापित", chk2:"अवसंरचना एवं स्वच्छता स्थिति", chk3:"लाभार्थियों से बातचीत पूर्ण", chk4:"फंड उपयोग रिकॉर्ड की जाँच",
+  capture_gps:"GPS लोकेशन कैप्चर करें", capture_photo:"फोटो साक्ष्य लें", locking:"लोकेशन लॉक हो रही है...", locked:"लॉक", photos_added:"2 फ़ोटो जोड़ी गईं",
+  submit_report:"निरीक्षण रिपोर्ट जमा करें", report_submitted:"रिपोर्ट जियो-टैग व टाइमस्टैंप सहित जमा हुई",
+  anomaly_chart:"AI विसंगति विश्लेषण — साप्ताहिक फ़्लैग", flagged_anomalies:"फ़्लैग की गई विसंगतियाँ", inspection_history:"निरीक्षण इतिहास",
+  confidence:"विश्वास", review_pending:"समीक्षा लंबित", investigation_ongoing:"जाँच जारी", resolved:"हल हो गई", compliant:"अनुपालन में", noncompliant:"गैर-अनुपालन",
+  week:"सप्ताह",
+  r1_t:"उपस्थिति बेमेल", r1_d:"कौशल विकास केंद्र, जयपुर — बायोमेट्रिक व CCTV गणना में अंतर",
+  r2_t:"फ़ीड डाउनटाइम", r2_d:"वृद्धाश्रम आशा किरण, नागपुर — 46 मिनट ऑफ़लाइन",
+  r3_t:"संभावित प्रॉक्सी स्टाफ", r3_d:"OBC छात्रावास परिसर 2 — चेहरा पहचान में असंगति",
+  h1_t:"अनुसूचित जाति छात्रावास, पटना", h1_d:"10 सित॰ · निरीक्षक: राघव",
+  h2_t:"दिव्यांग सशक्तिकरण केंद्र, रायपुर", h2_d:"8 सित॰ · निरीक्षक: मीना",
+  h3_t:"कौशल विकास केंद्र, जयपुर", h3_d:"6 सित॰ · निरीक्षक: राघव",
+  notif_title:"सूचनाएँ", mark_read:"सभी पढ़ी हुई चिह्नित करें", marked_read:"सभी सूचनाएँ पढ़ी हुई चिह्नित की गईं",
+  n_today:"आज", n_earlier:"पहले",
+  n1_t:"नया निरीक्षण असाइन हुआ", n1_d:"OBC छात्रावास, परिसर 2 आपको असाइन किया गया है — उच्च प्राथमिकता।", n1_time:"10 मिनट पहले",
+  n2_t:"विसंगति फ़्लैग हुई", n2_d:"कौशल विकास केंद्र, जयपुर में उपस्थिति बेमेल पाई गई।", n2_time:"1 घंटा पहले",
+  n3_t:"VC कॉल छूटी", n3_d:"वृद्धाश्रम आशा किरण को यादृच्छिक VC का उत्तर नहीं मिला।", n3_time:"3 घंटे पहले",
+  n4_t:"रिपोर्ट स्वीकृत", n4_d:"SC छात्रावास, पटना की आपकी निरीक्षण रिपोर्ट स्वीकृत हो गई है।", n4_time:"कल",
+}
+};
+
+// svg icon strings
+const icons = {
+  official:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 3 7v6c0 5 4 8.5 9 9 5-.5 9-4 9-9V7z"/></svg>`,
+  inspector:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2h6a1 1 0 0 1 1 1v1a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1z"/><path d="M5 5h14a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z"/><path d="M9 12l2 2 4-4"/></svg>`,
+  hq:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="1"/><line x1="9" y1="7" x2="9" y2="7.01"/><line x1="15" y1="7" x2="15" y2="7.01"/><line x1="9" y1="11" x2="9" y2="11.01"/><line x1="15" y1="11" x2="15" y2="11.01"/><line x1="9" y1="21" x2="9" y2="15"/><line x1="15" y1="21" x2="15" y2="15"/></svg>`,
+  assign:`<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 3h5v5"/><path d="M8 21H3v-5"/><path d="M21 3l-7 7"/><path d="M3 21l7-7"/></svg>`,
+  vc:`<svg viewBox="0 0 24 24" fill="none" stroke="#7A5300" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 10l5-3v10l-5-3"/><rect x="1" y="6" width="14" height="12" rx="2"/></svg>`,
+  alert:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`,
+  feed:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>`,
+  gps:`<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-7.5 8-13a8 8 0 1 0-16 0c0 5.5 8 13 8 13z"/><circle cx="12" cy="9" r="2.5"/></svg>`,
+  check:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`,
+  cross:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`,
+  phoneMissed:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 1 17 7"/><polyline points="17 1 23 7"/><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72"/></svg>`,
+  doc:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>`,
+};
+const navIcons = {
+  home:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>`,
+  feeds:icons.feed,
+  vc:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.68 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.32 1.85.55 2.81.68A2 2 0 0 1 22 16.92z"/></svg>`,
+  inspect:icons.inspector,
+  reports:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l4-6 4 3 5-8"/></svg>`,
+};
+
+// dummy data for the demo
+const projects = [
+  {name:"Divyang Empowerment Centre", loc:"Raipur, Chhattisgarh"},
+  {name:"SC Hostel — Block C", loc:"Patna, Bihar"},
+  {name:"Asha Kiran Old Age Home", loc:"Nagpur, Maharashtra"},
+  {name:"Skill Development Centre (PM-DAKSH)", loc:"Jaipur, Rajasthan"},
+  {name:"De-notified Tribe Welfare Unit", loc:"Hyderabad, Telangana"},
+  {name:"Child Care Home Samiti", loc:"Lucknow, Uttar Pradesh"},
+  {name:"OBC Hostel — Campus 2", loc:"Bhubaneswar, Odisha"},
+];
+const staffNames = ["Mr. Ramesh Yadav (Incharge)","Ms. Anjali Verma (Staff)","Mr. Vinod Kumar (Incharge)","Ms. Pooja Deshmukh (Beneficiary)","Mr. Sunil Rathore (Incharge)"];
+
+let role = 'official';
+let selectedLoginRole = 'official';
+let activeTab = 'home';
+
+
+function toggleLang(){
+  lang = lang === 'en' ? 'hi' : 'en';
+  localStorage.setItem('nigrani_lang', lang);
+  fullRender();
+}
+
+// login screen logic
+function renderLogin(){
+  const s = T[lang];
+  document.getElementById('loginHeading').textContent = s.login_heading;
+  document.getElementById('loginSub').textContent = s.login_sub;
+  document.getElementById('fieldLabelId').textContent = s.field_label_id;
+  document.getElementById('loginActionBtn').textContent = otpStage ? s.verify_continue : s.send_otp;
+  const roles = [
+    {key:'official', icon:icons.official, t1:s.role_official_full, t2:s.role_official_desc},
+    {key:'inspector', icon:icons.inspector, t1:s.role_inspector_full, t2:s.role_inspector_desc},
+    {key:'hq', icon:icons.hq, t1:s.role_hq_full, t2:s.role_hq_desc},
+  ];
+  document.getElementById('roleCards').innerHTML = roles.map(r=>`
+    <div class="role-card ${selectedLoginRole===r.key?'selected':''}" onclick="selectLoginRole('${r.key}')">
+      <div class="ric">${r.icon}</div>
+      <div><div class="rt1">${r.t1}</div><div class="rt2">${r.t2}</div></div>
+      <div class="chk"></div>
+    </div>
+  `).join('');
+  document.getElementById('otpArea').innerHTML = otpStage ? `
+    <div class="field-label">${s.otp_sent}</div>
+    <div class="otp-row"><div class="otp-box">4</div><div class="otp-box">2</div><div class="otp-box">1</div><div class="otp-box">7</div></div>
+  ` : '';
+}
+function selectLoginRole(key){ selectedLoginRole = key; renderLogin(); }
+let otpStage = false;
+function loginAction(){
+  if(!otpStage){
+    otpStage = true;
+    renderLogin();
+  } else {
+    role = selectedLoginRole;
+    otpStage = false;
+    localStorage.setItem('nigrani_role', role);
+    document.getElementById('overlayLogin').classList.remove('show');
+    fullRender();
+  }
+}
+function logout(){
+  localStorage.removeItem('nigrani_role');
+  otpStage = false;
+  document.getElementById('overlayLogin').classList.add('show');
+  renderLogin();
+}
+
+// notifications panel
+function openNotifications(){
+  renderNotifications();
+  document.getElementById('overlayNotif').classList.add('show');
+}
+function closeNotifications(){ document.getElementById('overlayNotif').classList.remove('show'); }
+function renderNotifications(){
+  const s = T[lang];
+  document.getElementById('notifTitle').textContent = s.notif_title;
+  document.getElementById('markReadBtn').textContent = s.mark_read;
+  document.getElementById('notifList').innerHTML = `
+    <div class="notif-day">${s.n_today}</div>
+    <div class="notif-item"><div class="ic" style="background:var(--navy);color:#fff;">${icons.assign}</div><div><div class="t1">${s.n1_t}</div><div class="t2">${s.n1_d}</div><div class="time">${s.n1_time}</div></div></div>
+    <div class="notif-item"><div class="ic" style="background:var(--red-soft);color:var(--red);">${icons.alert}</div><div><div class="t1">${s.n2_t}</div><div class="t2">${s.n2_d}</div><div class="time">${s.n2_time}</div></div></div>
+    <div class="notif-day">${s.n_earlier}</div>
+    <div class="notif-item"><div class="ic" style="background:var(--saffron-soft);color:#7A5300;">${icons.phoneMissed}</div><div><div class="t1">${s.n3_t}</div><div class="t2">${s.n3_d}</div><div class="time">${s.n3_time}</div></div></div>
+    <div class="notif-item"><div class="ic" style="background:var(--green-soft);color:var(--green);">${icons.doc}</div><div><div class="t1">${s.n4_t}</div><div class="t2">${s.n4_d}</div><div class="time">${s.n4_time}</div></div></div>
+  `;
+}
+
+// header, bottom nav, role switch
+function renderHeaderChrome(){
+  const s = T[lang];
+  document.getElementById('brandSub').textContent = s.brand_sub;
+  document.getElementById('langLabel').textContent = s.lang_label;
+  document.getElementById('roleToggle').innerHTML = `
+    <button class="${role==='official'?'active':''}" onclick="setRole('official')">${s.role_official}</button>
+    <button class="${role==='inspector'?'active':''}" onclick="setRole('inspector')">${s.role_inspector}</button>
+    <button class="${role==='hq'?'active':''}" onclick="setRole('hq')">${s.role_hq}</button>
+  `;
+  document.getElementById('bottomNav').innerHTML = `
+    <button class="nav-btn ${activeTab==='home'?'active':''}" onclick="setTab('home')">${navIcons.home}<span>${s.nav_dashboard}</span></button>
+    <button class="nav-btn ${activeTab==='feeds'?'active':''}" onclick="setTab('feeds')">${navIcons.feeds}<span>${s.nav_feed}</span></button>
+    <button class="nav-btn ${activeTab==='vc'?'active':''}" onclick="setTab('vc')">${navIcons.vc}<span>${s.nav_vc}</span></button>
+    <button class="nav-btn ${activeTab==='inspect'?'active':''}" onclick="setTab('inspect')">${navIcons.inspect}<span>${s.nav_inspect}</span></button>
+    <button class="nav-btn ${activeTab==='reports'?'active':''}" onclick="setTab('reports')">${navIcons.reports}<span>${s.nav_reports}</span></button>
+  `;
+  document.getElementById('t-feeds').textContent = s.feeds_title;
+  document.getElementById('t-inspectTitle').textContent = s.inspect_title;
+  document.getElementById('t-checklist').textContent = s.checklist_title;
+  document.getElementById('btnGenAssign').textContent = s.generate_assignment;
+  document.getElementById('btnSubmitReport').textContent = s.submit_report;
+  document.getElementById('t-anomalyChart').textContent = s.anomaly_chart;
+  document.getElementById('t-flaggedAnomalies').textContent = s.flagged_anomalies;
+  document.getElementById('t-inspectionHistory').textContent = s.inspection_history;
+}
+function setRole(r){ role = r; renderHeaderChrome(); renderHome(); }
+function setTab(t){
+  activeTab = t;
+  document.querySelectorAll('.screen').forEach(sc=>sc.classList.remove('active'));
+  document.getElementById('screen-'+t).classList.add('active');
+  renderHeaderChrome();
+  document.getElementById('content').scrollTop = 0;
+}
+function showToast(msg){
+  const t = document.getElementById('toast');
+  document.getElementById('toastText').textContent = msg;
+  t.classList.add('show');
+  clearTimeout(window._toastTimer);
+  window._toastTimer = setTimeout(()=>t.classList.remove('show'), 2400);
+}
+
+// home / dashboard screen
+function renderHome(){
+  const s = T[lang];
+  const el = document.getElementById('screen-home');
+  if(role==='official'){
+    el.innerHTML = `
+      <h2 class="section-title" style="margin-top:2px;">${s.welcome_official}</h2>
+      <div class="stat-grid">
+        <div class="stat"><div class="num">312</div><div class="lbl">${s.live_projects}</div><div class="delta up">${s.d_this_week}</div></div>
+        <div class="stat"><div class="num">287</div><div class="lbl">${s.active_cctv}</div><div class="delta up">${s.d_uptime}</div></div>
+        <div class="stat"><div class="num">41</div><div class="lbl">${s.inspections_today}</div><div class="delta up">${s.d_completed}</div></div>
+        <div class="stat"><div class="num">7</div><div class="lbl">${s.anomalies_flagged}</div><div class="delta warn">${s.d_review}</div></div>
+      </div>
+      <h2 class="section-title">${s.live_monitoring}</h2>
+      <div class="map-panel">
+        <div class="grid-bg"></div>
+        <div class="top"><div class="t">${s.states_covered}</div><div class="s">${s.updated_rt}</div></div>
+        <div class="state-dots">
+          <div class="state-dot ok"><div class="ring"></div><div class="name">Chhattisgarh</div></div>
+          <div class="state-dot ok"><div class="ring"></div><div class="name">Bihar</div></div>
+          <div class="state-dot watch"><div class="ring"></div><div class="name">Maharashtra</div></div>
+          <div class="state-dot flag"><div class="ring"></div><div class="name">Rajasthan</div></div>
+          <div class="state-dot ok"><div class="ring"></div><div class="name">Telangana</div></div>
+          <div class="state-dot watch"><div class="ring"></div><div class="name">Uttar Pradesh</div></div>
+        </div>
+        <div class="legend"><span><i style="background:var(--green)"></i>${s.legend_normal}</span><span><i style="background:var(--saffron)"></i>${s.legend_watch}</span><span><i style="background:var(--red)"></i>${s.legend_anomaly}</span></div>
+      </div>
+      <h2 class="section-title">${s.quick_actions}</h2>
+      <div class="qa-grid">
+        <button class="qa-btn a" onclick="setTab('inspect')">${icons.assign}${s.assign_random}</button>
+        <button class="qa-btn b" onclick="setTab('vc')">${icons.vc}${s.start_vc}</button>
+      </div>
+      <h2 class="section-title">${s.recent_anomalies}</h2>
+      <div class="card">
+        <div class="list-item"><div class="ic" style="background:var(--red-soft);color:var(--red);">${icons.alert}</div><div class="body"><div class="t1">${s.anomaly1_t}</div><div class="t2">${s.anomaly1_d}</div><span class="tag red">${s.anomaly1_tag}</span></div></div>
+        <div class="list-item"><div class="ic" style="background:var(--saffron-soft);color:#7A5300;">${icons.feed}</div><div class="body"><div class="t1">${s.anomaly2_t}</div><div class="t2">${s.anomaly2_d}</div><span class="tag saffron">${s.anomaly2_tag}</span></div></div>
+      </div>
+    `;
+  } else if(role==='inspector'){
+    el.innerHTML = `
+      <h2 class="section-title" style="margin-top:2px;">${s.welcome_inspector}</h2>
+      <div class="assign-card">
+        <div class="top"><div><div class="tt">${s.todays_assignment}</div><div class="nm">OBC Hostel — Campus 2</div><div class="loc">Bhubaneswar, Odisha</div></div><span class="priority high">${s.high_priority}</span></div>
+        <div class="gps-line">${icons.gps}20.2961° N, 85.8245° E · 1.2 km</div>
+      </div>
+      <button class="btn-primary" style="margin-top:12px;" onclick="setTab('inspect')">${s.start_inspection}</button>
+      <div class="stat-grid" style="margin-top:20px;">
+        <div class="stat"><div class="num">23</div><div class="lbl">${s.inspections_month}</div></div>
+        <div class="stat"><div class="num">91%</div><div class="lbl">${s.compliance_rate}</div></div>
+      </div>
+      <h2 class="section-title">${s.quick_actions}</h2>
+      <div class="qa-grid">
+        <button class="qa-btn a" onclick="setTab('vc')">${icons.vc}${s.connect_vc}</button>
+        <button class="qa-btn b" onclick="setTab('feeds')">${icons.feed}${s.view_feed}</button>
+      </div>
+    `;
+  } else {
+    el.innerHTML = `
+      <h2 class="section-title" style="margin-top:2px;">${s.welcome_hq}</h2>
+      <div class="stat-grid">
+        <div class="stat"><div class="num">18</div><div class="lbl">${s.states_onboarded}</div></div>
+        <div class="stat"><div class="num">76%</div><div class="lbl">${s.budget_utilized}</div></div>
+        <div class="stat"><div class="num">412</div><div class="lbl">${s.ngos_monitored}</div></div>
+        <div class="stat"><div class="num">6.2%</div><div class="lbl">${s.noncompliance}</div></div>
+      </div>
+      <h2 class="section-title">${s.state_leaderboard}</h2>
+      <div class="card">
+        ${[["Chhattisgarh",94],["Bihar",89],["Telangana",85],["Maharashtra",71],["Rajasthan",58]].map((r,i)=>`
+          <div class="lb-row">
+            <div class="lb-rank">${i+1}</div>
+            <div class="lb-body"><div class="t1">${r[0]}</div><div class="lb-track"><div class="lb-fill" style="width:${r[1]}%; background:${r[1]>80?'var(--green)':r[1]>65?'var(--saffron)':'var(--red)'};"></div></div></div>
+            <div class="lb-pct">${r[1]}%</div>
+          </div>
+        `).join('')}
+      </div>
+      <h2 class="section-title">${s.budget_utilization}</h2>
+      <div class="card">
+        ${[["PM-DAKSH Skilling",82],["SC/ST Hostel Scheme",68],["Senior Citizen Welfare",91],["Divyangjan Empowerment",54]].map(b=>`
+          <div class="budget-row">
+            <div class="head"><b>${b[0]}</b><span>${b[1]}%</span></div>
+            <div class="budget-track"><div class="budget-fill" style="width:${b[1]}%;"></div></div>
+          </div>
+        `).join('')}
+      </div>
+      <h2 class="section-title">${s.flagged_districts}</h2>
+      <div class="card">
+        <div class="heat-grid">
+          <div class="heat-cell c1"><div class="n">14</div><div class="d">Jaipur</div></div>
+          <div class="heat-cell c1"><div class="n">11</div><div class="d">Nagpur</div></div>
+          <div class="heat-cell c2"><div class="n">7</div><div class="d">Lucknow</div></div>
+          <div class="heat-cell c2"><div class="n">6</div><div class="d">Bhubaneswar</div></div>
+          <div class="heat-cell c3"><div class="n">2</div><div class="d">Patna</div></div>
+          <div class="heat-cell c3"><div class="n">1</div><div class="d">Raipur</div></div>
+          <div class="heat-cell c3"><div class="n">1</div><div class="d">Hyderabad</div></div>
+          <div class="heat-cell c3"><div class="n">0</div><div class="d">Shimla</div></div>
+        </div>
+      </div>
+    `;
+  }
+  el.innerHTML += `<button class="btn-ghost" style="margin-top:20px;" onclick="logout()">${lang==='hi'?'साइन आउट करें':'Sign out'}</button>`;
+}
+
+// live feeds screen
+function renderFeeds(){
+  const s = T[lang];
+  const list = document.getElementById('feedsList');
+  list.innerHTML = projects.slice(0,5).map((p,i)=>`
+    <div class="feed-card">
+      <div class="feed-video">
+        <div class="scan"></div>
+        <div class="live-pill"><span class="dot"></span>LIVE</div>
+        <div class="viewers">${12+i*3} ${s.watching}</div>
+        <div class="ts">CAM 0${i+1} · ${new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})}</div>
+      </div>
+      <div class="feed-meta"><div class="t1">${p.name}</div><div class="t2">${p.loc}</div></div>
+    </div>
+  `).join('');
+}
+
+// random VC connect
+let shuffleInterval, callTimer;
+function renderVCHero(){
+  const s = T[lang];
+  document.getElementById('vcHero').innerHTML = `
+    <div class="icon-wrap">${icons.vc.replace('#7A5300','var(--saffron)')}</div>
+    <h3>${s.vc_title}</h3>
+    <p>${s.vc_desc}</p>
+    <button class="btn-primary" onclick="startShuffle()" id="vcBtn">${s.start_random_vc}</button>
+    <div class="shuffle-box" id="shuffleBox" style="display:none;"></div>
+  `;
+}
+function startShuffle(){
+  const s = T[lang];
+  const btn = document.getElementById('vcBtn'); const box = document.getElementById('shuffleBox');
+  btn.disabled = true; box.style.display = 'block';
+  let count = 0;
+  shuffleInterval = setInterval(()=>{
+    const p = projects[Math.floor(Math.random()*projects.length)];
+    box.textContent = s.checking + ' ' + p.name;
+    count++;
+    if(count>14){
+      clearInterval(shuffleInterval);
+      const chosen = projects[Math.floor(Math.random()*projects.length)];
+      const staff = staffNames[Math.floor(Math.random()*staffNames.length)];
+      box.textContent = '✓ ' + chosen.name + ' — ' + s.selected_connecting;
+      setTimeout(()=>launchCall(chosen, staff), 1100);
+    }
+  }, 90);
+}
+function launchCall(project, staff){
+  document.getElementById('vcHero').innerHTML = `
+    <div class="call-screen">
+      <div class="call-top">
+        <div class="avatar">${staff[0]}</div>
+        <div class="nm">${staff}</div>
+        <div class="rl">${project.name} · ${project.loc}</div>
+        <div class="tm" id="callTime">00:00</div>
+      </div>
+      <div class="call-actions">
+        <button class="ca-mute"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/></svg></button>
+        <button class="ca-end" onclick="endCall()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.68 13.31a16 16 0 0 0 3.41 2.6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 17.92z"/><line x1="22" y1="2" x2="2" y2="22"/></svg></button>
+        <button class="ca-cam">${icons.feed.replace('currentColor','#fff')}</button>
+      </div>
+    </div>`;
+  let secs = 0;
+  callTimer = setInterval(()=>{
+    secs++;
+    const m = String(Math.floor(secs/60)).padStart(2,'0'); const sec = String(secs%60).padStart(2,'0');
+    const el = document.getElementById('callTime'); if(el) el.textContent = m+':'+sec;
+  }, 1000);
+}
+function endCall(){ clearInterval(callTimer); renderVCHero(); showToast(T[lang].call_ended); }
+
+// inspection assignment + checklist
+function generateAssignment(){
+  const s = T[lang];
+  const card = document.getElementById('assignCard');
+  let count=0;
+  const iv = setInterval(()=>{
+    const p = projects[Math.floor(Math.random()*projects.length)];
+    card.innerHTML = `<div class="tt">${s.scanning}</div><div class="nm">${p.name}</div><div class="loc">${p.loc}</div>`;
+    count++;
+    if(count>10){
+      clearInterval(iv);
+      const chosen = projects[Math.floor(Math.random()*projects.length)];
+      const score = Math.random();
+      const pr = score>0.66 ? {c:'high',t:s.priority_high} : score>0.33 ? {c:'med',t:s.priority_med} : {c:'low',t:s.priority_low};
+      card.innerHTML = `
+        <div class="top"><div><div class="tt">${s.assigned_by_ai}</div><div class="nm">${chosen.name}</div><div class="loc">${chosen.loc}</div></div><span class="priority ${pr.c}">${pr.t}</span></div>
+        <div class="gps-line">${icons.gps}${s.coords_generated} ${(score*100).toFixed(0)}%</div>`;
+      showToast(s.new_assignment);
+    }
+  }, 90);
+}
+function renderChecklist(){
+  const s = T[lang];
+  const items = [s.chk1, s.chk2, s.chk3, s.chk4];
+  document.getElementById('checklist').innerHTML = items.map((c,i)=>`
+    <div class="chk-item" id="chk-${i}"><div class="chk-box" onclick="toggleChk(${i})">${icons.check}</div><span>${c}</span></div>
+  `).join('');
+  const gpsBtn = document.getElementById('gpsBtn');
+  if(!gpsBtn.classList.contains('filled')) gpsBtn.innerHTML = `${icons.gps}${s.capture_gps}`;
+  const photoBtn = document.getElementById('photoBtn');
+  if(!photoBtn.classList.contains('filled')) photoBtn.innerHTML = `${icons.feed}${s.capture_photo}`;
+}
+function toggleChk(i){
+  const item = document.getElementById('chk-'+i); const box = item.querySelector('.chk-box');
+  box.classList.toggle('done'); item.classList.toggle('done');
+}
+function captureGPS(){
+  const s = T[lang];
+  const btn = document.getElementById('gpsBtn');
+  if(!navigator.geolocation){
+    btn.textContent = 'GPS not available on this device';
+    return;
+  }
+  btn.textContent = s.locking;
+  navigator.geolocation.getCurrentPosition(
+    function(pos){
+      const lat = pos.coords.latitude.toFixed(4);
+      const lon = pos.coords.longitude.toFixed(4);
+      btn.classList.add('filled');
+      btn.innerHTML = icons.gps + lat + '°, ' + lon + '° ' + s.locked;
+      localStorage.setItem('nigrani_last_gps', lat + ',' + lon);
+    },
+    function(err){
+      btn.classList.add('filled');
+      btn.style.borderColor = 'var(--red)';
+      btn.style.color = 'var(--red)';
+      btn.textContent = 'Location permission denied — enable it and retry';
+    },
+    { enableHighAccuracy:true, timeout:8000 }
+  );
+}
+function capturePhoto(){
+  document.getElementById('photoInput').click();
+}
+function handlePhoto(evt){
+  const file = evt.target.files && evt.target.files[0];
+  if(!file) return;
+  const s = T[lang];
+  const btn = document.getElementById('photoBtn');
+  btn.classList.add('filled');
+  btn.innerHTML = icons.check + s.photos_added;
+  const reader = new FileReader();
+  reader.onload = function(e){
+    const img = document.getElementById('photoPreview');
+    img.src = e.target.result;
+    document.getElementById('photoPreviewWrap').style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+}
+function submitReport(){ showToast(T[lang].report_submitted); }
+
+// reports / analytics screen
+function renderReports(){
+  const s = T[lang];
+  const weeks = [38,52,71,44,63,29];
+  document.getElementById('barChart').innerHTML = weeks.map((v,i)=>`
+    <div class="col"><div class="bar ${v>65?'flag':''}" style="height:${v}%;"></div><div class="wk">${s.week} ${i+1}</div></div>
+  `).join('');
+  document.getElementById('anomalyList').innerHTML = `
+    <div class="anomaly-item"><div class="row"><div class="t1">${s.r1_t}</div><span class="conf">${s.confidence} 88%</span></div><div class="reason">${s.r1_d}</div><span class="tag red">${s.review_pending}</span></div>
+    <div class="anomaly-item"><div class="row"><div class="t1">${s.r2_t}</div><span class="conf">${s.confidence} 95%</span></div><div class="reason">${s.r2_d}</div><span class="tag saffron">${s.investigation_ongoing}</span></div>
+    <div class="anomaly-item"><div class="row"><div class="t1">${s.r3_t}</div><span class="conf">${s.confidence} 76%</span></div><div class="reason">${s.r3_d}</div><span class="tag green">${s.resolved}</span></div>
+  `;
+  document.getElementById('historyList').innerHTML = `
+    <div class="list-item"><div class="ic" style="background:var(--green-soft);color:var(--green);">${icons.check}</div><div class="body"><div class="t1">${s.h1_t}</div><div class="t2">${s.h1_d}</div><span class="tag green">${s.compliant}</span></div></div>
+    <div class="list-item"><div class="ic" style="background:var(--red-soft);color:var(--red);">${icons.cross}</div><div class="body"><div class="t1">${s.h2_t}</div><div class="t2">${s.h2_d}</div><span class="tag red">${s.noncompliant}</span></div></div>
+    <div class="list-item"><div class="ic" style="background:var(--green-soft);color:var(--green);">${icons.check}</div><div class="body"><div class="t1">${s.h3_t}</div><div class="t2">${s.h3_d}</div><span class="tag green">${s.compliant}</span></div></div>
+  `;
+}
+
+
+function fullRender(){
+  renderHeaderChrome();
+  renderHome();
+  renderFeeds();
+  renderVCHero();
+  renderChecklist();
+  renderReports();
+  renderLogin();
+  if(document.getElementById('overlayNotif').classList.contains('show')) renderNotifications();
+}
+
+const savedRole = localStorage.getItem('nigrani_role');
+if(savedRole){
+  role = savedRole;
+  document.getElementById('overlayLogin').classList.remove('show');
+}
+fullRender();
+</script>
+</body>
+</html>
